@@ -8,8 +8,8 @@ T-Rex Runner from chromium with Reinforcement Learning full js
 	2. HTML & CSS for UI
 
 ### Dependencies
-[Tensorflow.js](https://js.tensorflow.org)
-[T-Rex Runner](https://cs.chromium.org/chromium/src/components/neterror/resources/offline.js?q=t-rex+package:%5Echromium$&dr=C&l=7) from chromium
+1. [Tensorflow.js](https://js.tensorflow.org)
+2. [T-Rex Runner](https://cs.chromium.org/chromium/src/components/neterror/resources/offline.js?q=t-rex+package:%5Echromium$&dr=C&l=7) from chromium
 
 ## Algorithms
 ### QLearning
