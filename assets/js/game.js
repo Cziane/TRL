@@ -598,6 +598,8 @@
             if (this.playing || (!this.activated &&
                 this.tRex.blinkCount < Runner.config.MAX_BLINK_COUNT)) {
                 this.tRex.update(deltaTime);
+            	console.log(this.horizon.obstacles);
+            	console.log(this.tRex);
                 this.scheduleNextUpdate();
             }
         },
@@ -2556,7 +2558,6 @@
             this.horizonLine.update(deltaTime, currentSpeed);
             this.nightMode.update(showNightMode);
             this.updateClouds(deltaTime, currentSpeed);
-
             if (updateObstacles) {
                 this.updateObstacles(deltaTime, currentSpeed);
             }
