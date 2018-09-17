@@ -2,6 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 // extract from chromium source code by @liuwayong
+var game;
 (function () {
     'use strict';
     /**
@@ -600,6 +601,7 @@
                 this.tRex.update(deltaTime);
             	console.log(this.horizon.obstacles);
             	console.log(this.tRex);
+            	console.log(this.currentSpeed);
                 this.scheduleNextUpdate();
             }
         },
@@ -2710,7 +2712,7 @@
 
 
 function onDocumentLoad() {
-    new Runner('.interstitial-wrapper');
+    game=new Runner('.interstitial-wrapper');
 }
 
 document.addEventListener('DOMContentLoaded', onDocumentLoad);
