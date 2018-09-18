@@ -1,7 +1,9 @@
 /*General config*/
 
 var state=['jumping','running','dead'];
-var action['jump','do_nothing'];
+
+var action=['jump','do_nothing'];
+
 class TRL{
 
 	constructor(gme){
@@ -31,17 +33,17 @@ class TRL{
 		this.trex.width=dino.config.WIDTH;
 		this.trex.height=dino.config.HEIGHT;
 		this.trex.status=dino.status;
-		this.obstacles=[];
-
-		for (var i = 0; i <.obs.length; i++) {
-			this.obstacles[i]={
-				x : obs[i].xPos,
-				y : obs[i].yPos,
-				width : obs[i].size*obs[i].typeConfig.width,
-				height : obs[i].typeConfig.height
-			}
+		this.obstacle={
+			xpos:0,
+			ypos:0,
+			width:0,
+			height:0
 		}
+
 	}
+
+
+	
 
 
 	initEnvironment(){
@@ -50,28 +52,20 @@ class TRL{
 	}
 
 	jump(){
-		var pressthiskey = " "/* <--- :) !? q for example */; var e = new Event("keydown"); e.key=pressthiskey; e.keyCode=e.key.charCodeAt(0); e.which=e.keyCode; e.altKey=false; e.ctrlKey=true; e.shiftKey=false; e.metaKey=false; e.bubbles=true; document.dispatchEvent(e);
+		var pressthiskey = " "/* <--- :) !? q for example */;
+		var e = new Event("keydown");
+		e.key=pressthiskey;
+		e.keyCode=e.key.charCodeAt(0);
+		e.which=e.keyCode;
+		e.altKey=false;
+		e.ctrlKey=true;
+		e.shiftKey=false;
+		e.metaKey=false;
+		document.dispatchEvent(e);
 		return true;
 	}
 
 	run(){
 		return true;
 	}
-}
-
-class Game{
-
-	constructor(){
-		this.frame=0;
-		this.actions=[];
-		this.trex=[];
-		this.obstacles[];
-	}
-
-	update(dino,obs,action){
-		this.actions[this.frame]=action;
-		this.trex[this.frame]=dino;
-		this.obstacles[this.frame]=obstacles
-	}
-
 }
