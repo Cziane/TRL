@@ -16,16 +16,24 @@ class TRL{
 		this.frame=0;
 		//action matrix
 		this.actions=[];
+		this.decision=[];
 		//Q-learning parameters
 		this.gamma=0.99;
 		this.final_expsilon=0.0001;
 		this.initial_espilon=0.01;
 
-		this.total_reward=0;
+		this.total_reward=[];
 
 		this.previousAction=undefined;
 
 		this.model=tf.sequential();
+		this.model.add(tf.layers.dense({units:16, inputShape:[4]}));
+		this.model.add(tf.layers.dense({units:8}));
+		this.model.add(tf.layers.dense({units:1, activation:'sigmoid'}));
+
+		this.model.compile({loss:'meanSquaredError',optimizer:'adam'});
+
+		this.trained=false;
 	}
 
 	start(){
@@ -36,11 +44,8 @@ class TRL{
 	update(dino,obs,score, speed){
 		this.status=this.getStatus(dino.status);
 		if(this.previousAction !=undefined){
-			this.actions[this.frame-1][3]=this.previousAction;
-			this.reward=this.getReward();
-			this.actions[this.frame-1][4]=this.reward;
-			this.total_reward+=this.reward;
-			console.log(this.reward);
+			this.decision[this.frame-1]=this.previousAction;
+			this.total_reward[this.frame-1]=this.getReward();
 		}
 		if(this.status==2){
 			this.game.restart();
@@ -75,7 +80,8 @@ class TRL{
 		
 
 		this.speed=speed;
-		this.actions[this.frame]=[speed, this.getDistance(), this.status];
+		var distance=this.getDistance();
+		this.actions[this.frame]=[speed, distance[0],distance[1], this.status];
 		//console.log(this.getDistance());
 		this.frame++;
 		this.previousAction=this.takedecision();
@@ -141,6 +147,28 @@ class TRL{
 
 	takedecision(){
 		if(this.frame < this.learningMin){
+			var decision= Math.floor(Math.random() * Math.floor(1000));
+			if(decision<600){
+				return 1;
+			}
+			else{
+				return 0;
+			}
+		}
+		else{
+			if(!this.trained){
+				var tensorX=tf.tensor2d(this.actions.slice(0,this.actions.length-1));
+				var tensorY=tf.tensor1d(this.decision);
+
+				this.model.fit(tensorX,tensorY,{epochs:3}).then(()=>{
+					this.model.predict(tf.tensor2d([this.actions[this.frame-1]])).print();
+				});
+				this.trained=true;
+			}
+			else{
+				this.model.predict(tf.tensor2d([this.actions[this.frame-1]])).print();
+			}
+			
 			var decision= Math.floor(Math.random() * Math.floor(1000));
 			if(decision<600){
 				return 1;
