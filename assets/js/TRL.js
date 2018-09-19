@@ -12,6 +12,8 @@ class TRL{
 		this.learningMin=learningMin;
 		this.trex={};
 		this.real_frame=0;
+		this.random=true;
+		this.game_nb=0;
 		//matrice state;
 		this.frame=0;
 		//action matrix
@@ -48,7 +50,13 @@ class TRL{
 			this.total_reward[this.frame-1]=this.getReward();
 		}
 		if(this.status==2){
-			this.game.restart();
+			this.game_nb++;
+			if(this.game_nb%this.learningMin==0){
+				this.train();
+			}
+			else{
+				this.game.restart();
+			}
 		}
 		if(this.real_frame%4 !=0){
 			this.real_frame++;
@@ -146,7 +154,7 @@ class TRL{
 	}
 
 	takedecision(){
-		if(this.frame < this.learningMin){
+		if(this.random){
 			var decision= Math.floor(Math.random() * Math.floor(1000));
 			if(decision<600){
 				return 1;
@@ -156,30 +164,21 @@ class TRL{
 			}
 		}
 		else{
-			if(!this.trained){
-				var tensorX=tf.tensor2d(this.actions.slice(0,this.actions.length-1));
-				var tensorY=tf.tensor1d(this.decision);
-
-				this.model.fit(tensorX,tensorY,{epochs:3}).then(()=>{
-					this.model.predict(tf.tensor2d([this.actions[this.frame-1]])).print();
-				});
-				this.trained=true;
-			}
-			else{
-				this.model.predict(tf.tensor2d([this.actions[this.frame-1]])).print();
-			}
-			
-			var decision= Math.floor(Math.random() * Math.floor(1000));
-			if(decision<600){
-				return 1;
-			}
-			else{
-				return 0;
-			}
+			var res=this.model.predict(tf.tensor2d([this.actions[this.frame-1]]));
+			return Math.ceil(res.shape[0]);
 		}
 	}
 
+	train(){
+				var tensorX=tf.tensor2d(this.actions);
+				var tensorY=tf.tensor1d(this.decision);
 
+				this.model.fit(tensorX,tensorY,{epochs:3}).then(()=>{
+					this.game.restart();
+					this.random=false;
+				});
+				
+	}
 	
 
 
