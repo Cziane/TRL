@@ -21,7 +21,7 @@ class TRL{
 		this.final_expsilon=0.0001;
 		this.initial_espilon=0.01;
 
-		this.reward=0;
+		this.total_reward=0;
 
 		this.previousAction=undefined;
 
@@ -34,7 +34,15 @@ class TRL{
 	}
 
 	update(dino,obs,score, speed){
-		if(dino.status=="CRASHED"){
+		this.status=this.getStatus(dino.status);
+		if(this.previousAction !=undefined){
+			this.actions[this.frame-1][3]=this.previousAction;
+			this.reward=this.getReward();
+			this.actions[this.frame-1][4]=this.reward;
+			this.total_reward+=this.reward;
+			console.log(this.reward);
+		}
+		if(this.status==2){
 			this.game.restart();
 		}
 		if(this.real_frame%4 !=0){
@@ -47,7 +55,6 @@ class TRL{
 		this.trex.y=dino.yPos;
 		this.trex.width=dino.config.WIDTH;
 		this.trex.height=dino.config.HEIGHT;
-		this.trex.status=this.getStatus(dino.status);
 		if(obs !=undefined){
 			this.obstacle={
 				xpos:obs.xPos,
@@ -68,11 +75,8 @@ class TRL{
 		
 
 		this.speed=speed;
-		this.actions[this.frame]=[speed, this.getDistance(), this.trex.status];
-		if(this.previousAction !=undefined){
-			this.actions[this.frame-1][3]=this.previousAction;
-		}
-		console.log(this.getDistance());
+		this.actions[this.frame]=[speed, this.getDistance(), this.status];
+		//console.log(this.getDistance());
 		this.frame++;
 		this.previousAction=this.takedecision();
 		switch(this.previousAction){
@@ -82,6 +86,36 @@ class TRL{
 			case 1 :
 				this.run();
 				break;
+		}
+	}
+
+	getReward(){
+		//jump
+		if(this.previousAction==0){
+			if(this.status==2){
+				return -150;
+			}
+			else if(this.status==1){
+				return -1;
+			}
+			else if(this.actions[this.frame-1][1][0]-(this.actions[this.frame-1][0]*2)>=1){
+				return -5;
+			}
+			else{
+				return 5;
+			}
+		}
+		//run
+		else if(this.previousAction==1){
+			if(this.status==2){
+				return -150;
+			}
+			else{
+				if(this.actions[this.frame-1][1][0]!=0){
+					return 1-(1/this.actions[this.frame-1][1][0]);
+				}
+				return 1;
+			}
 		}
 	}
 
