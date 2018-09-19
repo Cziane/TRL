@@ -518,6 +518,9 @@ var game;
                 this.dimensions.HEIGHT);
         },
 
+        plug:function(bot){
+        	this.bot=bot;
+        },
         /**
          * Update the game frame and schedules the next one.
          */
@@ -599,9 +602,9 @@ var game;
             if (this.playing || (!this.activated &&
                 this.tRex.blinkCount < Runner.config.MAX_BLINK_COUNT)) {
                 this.tRex.update(deltaTime);
-            	console.log(this.horizon.obstacles);
-            	console.log(this.tRex);
-            	console.log(this.currentSpeed);
+            	if(this.bot !=undefined ){
+            		this.bot.update(this.tRex,this.horizon.obstacles[0],Math.ceil(this.distanceRan),this.currentSpeed);
+            	}
                 this.scheduleNextUpdate();
             }
         },
@@ -782,7 +785,7 @@ var game;
             this.distanceMeter.acheivement = false;
 
             this.tRex.update(100, Trex.status.CRASHED);
-
+            
             // Game over panel.
             if (!this.gameOverPanel) {
                 this.gameOverPanel = new GameOverPanel(this.canvas,
@@ -800,6 +803,9 @@ var game;
 
             // Reset the time clock.
             this.time = getTimeStamp();
+             if(this.bot !=undefined){
+            		this.bot.update(this.tRex,this.horizon.obstacles[0],Math.ceil(this.distanceRan),this.currentSpeed);
+             }
         },
 
         stop: function () {
