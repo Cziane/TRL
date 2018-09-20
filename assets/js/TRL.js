@@ -20,7 +20,7 @@ class TRL{
 		this.actions=[];
 		this.decision=[];
 		//Q-learning parameters
-		this.gamma=0.99;
+		this.gamma=1;
 		this.final_expsilon=0.0001;
 		this.initial_espilon=0.01;
 
@@ -29,11 +29,11 @@ class TRL{
 		this.previousAction=undefined;
 
 		this.model=tf.sequential();
-		this.model.add(tf.layers.dense({units:16, inputShape:[4]}));
+		this.model.add(tf.layers.dense({units:16, inputShape:[3]}));
 		this.model.add(tf.layers.dense({units:8}));
 		this.model.add(tf.layers.dense({units:1, activation:'sigmoid'}));
 
-		this.model.compile({loss:'meanSquaredError',optimizer:'adam'});
+		this.model.compile({loss:'meanSquaredError',optimizer:'sgd'});
 
 		this.trained=false;
 	}
@@ -112,11 +112,11 @@ class TRL{
 			else if(this.status==1){
 				return -1;
 			}
-			else if(this.actions[this.frame-1][1][0]-(this.actions[this.frame-1][0]*2)>=1){
+			else if(this.actions[this.frame-1][1]-(this.actions[this.frame-1][0]*5)>=1){
 				return -5;
 			}
 			else{
-				return 5;
+				return 5 +(0.1*(this.actions[this.frame-1][2]));
 			}
 		}
 		//run
@@ -125,8 +125,38 @@ class TRL{
 				return -150;
 			}
 			else{
-				if(this.actions[this.frame-1][1][0]!=0){
-					return 1-(1/this.actions[this.frame-1][1][0]);
+				if(this.actions[this.frame-1][1]!=0){
+					return 1-(1/this.actions[this.frame-1][1]);
+				}
+				return 1;
+			}
+		}
+	}
+
+	getRewardForAction(act){
+		//jump
+		if(act==0){
+			if(this.status==2){
+				return -150;
+			}
+			else if(this.status==1){
+				return -1;
+			}
+			else if(this.actions[this.frame-1][1]-(this.actions[this.frame-1][0]*5)>=1){
+				return -5;
+			}
+			else{
+				return 5 +(0.1*(this.actions[this.frame-1][2]));
+			}
+		}
+		//run
+		else if(act==1){
+			if(this.status==2){
+				return -150;
+			}
+			else{
+				if(this.actions[this.frame-1][1]!=0){
+					return 1-(1/this.actions[this.frame-1][1]);
 				}
 				return 1;
 			}
@@ -148,34 +178,90 @@ class TRL{
 		var farestPoit=[this.obstacle.xpos+this.obstacle.width,this.obstacle.ypos];
 		var tRexPoint=[this.trex.x+this.trex.width,this.trex.y];
 		
-		var distance=[Math.abs(nearestPoint[0]-tRexPoint[0]),Math.abs(nearestPoint[1]-tRexPoint[1])];
+		var distance=[Math.abs(nearestPoint[0]-tRexPoint[0]),nearestPoint[1]-tRexPoint[1]];
 
 		return distance;
 	}
 
 	takedecision(){
+		//console.log('For Jump ' + this.getRewardForAction(0)+' reward');
+		//console.log('For Jump ' + this.getRewardForAction(1)+' reward');
 		if(this.random){
-			var decision= Math.floor(Math.random() * Math.floor(1000));
-			if(decision<600){
-				return 1;
+			var rand=Math.random();
+			if(rand<this.final_expsilon){
+				var decision= Math.floor(Math.random() * Math.floor(1000));
+				if(decision<600){
+					return 1;
+				}
+				else{
+					return 0;
+				}
 			}
 			else{
-				return 0;
+				if(this.getRewardForAction(0)>this.getRewardForAction(1)){
+					return 0;
+				}
+				else{
+					return 1;
+				}
 			}
+			
 		}
 		else{
-			var res=this.model.predict(tf.tensor2d([this.actions[this.frame-1]]));
-			return Math.ceil(res.shape[0]);
+			var rand=Math.random();
+			if(this.gamma< rand){
+				var topredict=this.normalize()[this.frame-1];
+				var res=this.model.predict(tf.tensor2d([topredict]));
+				res.print();
+				return res.get(0,0)<0.9 ? 0 : 1;
+			}
+			if(this.getRewardForAction(0)>this.getRewardForAction(1)){
+					return 0;
+			}
+			else{
+				return 1;
+			}
 		}
 	}
 
+	normalize(){
+		var normalize=[];
+		var max_distance_y =-10;
+		var max_distance_x=-10;
+		var max_speed=-10;
+		for (var i = 0; i < this.actions.length; i++) {
+			if(this.actions[i][0]>max_speed){
+				max_speed=this.actions[i][0];
+			}
+			if(this.actions[i][1]>max_distance_x){
+				max_distance_x=this.actions[i][1];
+			}
+			if(this.actions[i][2]>max_distance_y){
+				max_distance_y=this.actions[i][2];
+			}
+		}
+
+		for (var j = 0; j < this.actions.length; j++) {
+			normalize[j]=[];
+			normalize[j][0]=this.actions[j][0]/max_speed;
+			normalize[j][1]=this.actions[j][1]/max_distance_x;
+			normalize[j][2]=this.actions[j][2]/max_distance_y;
+		}
+		return normalize;
+
+	}
+
 	train(){
-				var tensorX=tf.tensor2d(this.actions);
+				var tensorX=tf.tensor2d(this.normalize());
 				var tensorY=tf.tensor1d(this.decision);
 
-				this.model.fit(tensorX,tensorY,{epochs:3}).then(()=>{
+				this.model.fit(tensorX,tensorY,{epochs:10}).then(()=>{
 					this.game.restart();
 					this.random=false;
+					if(this.gamma>0){
+						this.gamma-=this.initial_espilon;
+
+					}
 				});
 				
 	}
