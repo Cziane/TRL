@@ -151,7 +151,7 @@ class TRL{
 	}
 
 	getDistance(){
-		var nearestPoint =[this.obstacle.xpos,this.obstacle.ypos];
+		var nearestPoint =[this.obstacle.xpos,this.obstacle.ypos+this.obstacle.heigh];
 		var farestPoit=[this.obstacle.xpos+this.obstacle.width,this.obstacle.ypos+this.obstacle.height];
 		var tRexPoint=[this.trex.x+this.trex.width,this.trex.y];
 		
