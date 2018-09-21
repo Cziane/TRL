@@ -602,7 +602,7 @@ var game;
             if (this.playing || (!this.activated &&
                 this.tRex.blinkCount < Runner.config.MAX_BLINK_COUNT)) {
                 this.tRex.update(deltaTime);
-            	if(this.bot !=undefined ){
+            	if(this.bot !=undefined && this.horizon.obstacles.length>0 ){
             		this.bot.update(this.tRex,this.horizon.obstacles[0],Math.ceil(this.distanceRan),this.currentSpeed);
             	}
                 this.scheduleNextUpdate();

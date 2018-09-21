@@ -17,20 +17,29 @@ class TRL{
 		this.decision=[];
 		//Q-learning parameters
 		this.gamma=1;
-		this.alpha=0.5;
-		this.explovsexploit=1;
-		this.final_expsilon=0.0001;
-		this.initial_espilon=0.01;
-		this.Q_Matrix=[[0,0,-10],[0,0,-10],[0,0,0]];
-		this.total_reward=[];
+		this.alpha=0.9;
+		this.explovsexploit=0.2;
+
+		this.R_Matrix=[
+		[1,0],
+		[1,-10],
+		[-150,-150]
+		];
+
+
+		//init
+		this.Q_Matrix=[
+		/*0*/	[0,0],
+		/*1*/	[0,0],
+		/*2*/	[0,0],
+				[0,0],
+		/*3*/	[-150,0],
+		/*4*/	[0,-150],
+
+		];	
+
 		this.status=[];
 		this.previousAction=undefined;
-		this.model=tf.sequential();
-		this.model.add(tf.layers.dense({units:16, inputShape:[4]}));
-		this.model.add(tf.layers.dense({units:8}));
-		this.model.add(tf.layers.dense({units:3, activation:'sigmoid'}));
-		this.model.compile({loss:'meanSquaredError',optimizer:'adam'});
-		this.trained=false;
 	}
 
 	start(){
@@ -40,17 +49,16 @@ class TRL{
 
 	update(dino,obs,score, speed){
 		if(this.getStatus(dino.status)==2){
-			if(this.game_nb>=this.learningMin && this.game_nb%this.learningMin==0){
-				this.train();
-			}
-			else{
-				this.game.restart();
-			}
-			this.game_nb++;
-			
-		}
-		if(this.real_frame%2!=0){
 			this.explovsexploit-=0.01;
+			var reward=this.getReward(this.previousAction, this.getStatus(dino.status));
+			this.distance=this.getDistance();
+			var state_d=this.getDistanceState(this.distance);
+			this.update_Q(state_d,this.getDistanceState([this.distance[0]+this.speed*2,this.distance[1]]),reward,this.previousAction);
+			this.game_nb++;
+			this.game.restart();
+			return 0;			
+		}
+		if(this.real_frame%4!=0){
 			this.real_frame++;
 			return 0;
 		}
@@ -69,22 +77,22 @@ class TRL{
 		}
 		else{
 			this.obstacle={
-				xpos:600,
-				ypos:600,
+				xpos:700,
+				ypos:0,
 				width:0,
 				height:0
 			}
 
 		}
 		
-
 		this.speed=speed;
 		this.distance=this.getDistance();
 		this.actions[this.frame]=[speed, this.distance[0],this.distance[1], this.status[this.frame]];
 		//console.log(this.getDistance());
-		console.log(this.Q_Matrix);
-		var reward=this.frame>0 ? this.getReward(this.previousAction, this.status[this.frame-1]): this.getReward(0,0);
-		this.previousAction=this.update_Q(this.status[this.frame],reward);
+		var state_d=this.getDistanceState(this.distance);
+		this.previousAction=this.takedecision(state_d);
+		var reward=this.getReward(this.previousAction, this.status[this.frame]);
+		this.update_Q(state_d,this.getDistanceState([this.distance[0]+this.speed*2,this.distance[1]]),reward,this.previousAction);
 		//this.previousAction=this.takedecision();
 		switch(this.previousAction){
 			case 0 :
@@ -98,40 +106,13 @@ class TRL{
 		this.frame++;
 	}
 
-	update_Q(s,r,done){
-		if(!this.trained){
-			this.Q_Matrix[0][0]*=((this.distance[0])/600);	
-			this.Q_Matrix[0][1]*=(1-((this.distance[0])/600));
-			var run_next=this.Q_Matrix[this.nextState(0,s)][0]+(this.explovsexploit*Math.random());
-			var jump_next=this.Q_Matrix[this.nextState(1,s)][1]+(this.explovsexploit*Math.random());
-			var max_q_next=Math.max(run_next,jump_next);
-		}
-		else{
-			var pred=this.model.predict(tf.tensor2d([this.actions[this.frame]]));
-			var run_next=pred.get(0,0);
-			var jump_next=pred.get(0,1);
-			var max_q_next=Math.max(run_next,jump_next);
-		}
-		
-		var max_action=1;
-		var min_action=0;
-		if(run_next==max_q_next){
-			max_action=0;
-			min_action=1;
-		}
-		this.Q_Matrix[s][max_action]=this.alpha*(r+this.gamma*max_q_next-this.Q_Matrix[s][max_action]);
-		//this.Q_Matrix[s][1]=this.alpha*(r+this.gamma*max_q_next-this.Q_Matrix[s][1]);
-		this.decision[this.frame]=this.Q_Matrix[s];
-		if(run_next== max_q_next){
-			return 0;
-		}
-		else{
-			return 1;
-		}
+	update_Q(s,s_next,r,a){
+		var max_q_next=Math.max(this.Q_Matrix[s_next][0],this.Q_Matrix[s_next][1]);
+		this.Q_Matrix[s][a]=this.alpha*(r+this.gamma*max_q_next-this.Q_Matrix[s][a]);
 	}
 
 	getReward(done,state){
-		return this.Q_Matrix[state][done];
+		return this.R_Matrix[state][done];
 	}
 
 	nextState(action,state){
@@ -175,27 +156,43 @@ class TRL{
 		var tRexPoint=[this.trex.x+this.trex.width,this.trex.y];
 		
 		var distance=[Math.abs(nearestPoint[0]-tRexPoint[0]),nearestPoint[1]-tRexPoint[1]];
-
 		return distance;
 	}
 
-	takedecision(){
-
+	getDistanceState(distance){
+			if(distance[1]<-10){
+				return 5;
+			}
+			if(distance[0]< this.speed*5){
+				return 4;
+			}
+			else if(distance[0]<this.speed*10){
+				return 3;
+			}
+			else if(distance[0]<this.speed*15){
+				return 2;
+			}
+			else if(distance[0]<this.speed*20){
+				return 1;
+			}
+			else{
+				return 0;
+			}
 	}
 
-	normalize(){
+	takedecision(state){
+		var random=Math.random();
+		if(random<this.explovsexploit){
+			return Math.floor(Math.random()*2);
+		}
 
-
+		var action = this.Q_Matrix[state][0] > this.Q_Matrix[state][1] ? 0 : 1;
+		return action;
 	}
 
-	train(){
-		var tensorX=tf.tensor2d(this.actions);
-		var tensorY=tf.tensor2d(this.decision);
-		this.model.fit(tensorX,tensorY,{epochs:10}).then(()=>{
-					this.trained=true;
-					this.game.restart();
-		});
-				
+
+
+	train(){	
 	}
 
 
