@@ -21,11 +21,15 @@ class TRL{
 		this.explovsexploit=1;
 		this.final_expsilon=0.0001;
 		this.initial_espilon=0.01;
-		this.Q_Matrix=[[0,0,-10],[0,-5,-10],[0,0,0]];
+		this.Q_Matrix=[[0,0,-10],[0,0,-10],[0,0,0]];
 		this.total_reward=[];
 		this.status=[];
 		this.previousAction=undefined;
-
+		this.model=tf.sequential();
+		this.model.add(tf.layers.dense({units:16, inputShape:[4]}));
+		this.model.add(tf.layers.dense({units:8}));
+		this.model.add(tf.layers.dense({units:3, activation:'sigmoid'}));
+		this.model.compile({loss:'meanSquaredError',optimizer:'adam'});
 		this.trained=false;
 	}
 
@@ -36,7 +40,14 @@ class TRL{
 
 	update(dino,obs,score, speed){
 		if(this.getStatus(dino.status)==2){
-			this.game.restart();
+			if(this.game_nb>=this.learningMin && this.game_nb%this.learningMin==0){
+				this.train();
+			}
+			else{
+				this.game.restart();
+			}
+			this.game_nb++;
+			
 		}
 		if(this.real_frame%2!=0){
 			this.explovsexploit-=0.01;
@@ -69,7 +80,7 @@ class TRL{
 
 		this.speed=speed;
 		this.distance=this.getDistance();
-		//this.actions[this.frame]=[speed, distance[0],distance[1], this.status];
+		this.actions[this.frame]=[speed, this.distance[0],this.distance[1], this.status[this.frame]];
 		//console.log(this.getDistance());
 		console.log(this.Q_Matrix);
 		var reward=this.frame>0 ? this.getReward(this.previousAction, this.status[this.frame-1]): this.getReward(0,0);
@@ -88,11 +99,20 @@ class TRL{
 	}
 
 	update_Q(s,r,done){
-		this.Q_Matrix[0][0]*=((this.distance[0])/600);	
-		this.Q_Matrix[0][1]*=(1-((this.distance[0])/600));
-		var run_next=this.Q_Matrix[this.nextState(0,s)][0]+(this.explovsexploit*Math.random());
-		var jump_next=this.Q_Matrix[this.nextState(1,s)][1]+(this.explovsexploit*Math.random());
-		var max_q_next=Math.max(run_next,jump_next);
+		if(!this.trained){
+			this.Q_Matrix[0][0]*=((this.distance[0])/600);	
+			this.Q_Matrix[0][1]*=(1-((this.distance[0])/600));
+			var run_next=this.Q_Matrix[this.nextState(0,s)][0]+(this.explovsexploit*Math.random());
+			var jump_next=this.Q_Matrix[this.nextState(1,s)][1]+(this.explovsexploit*Math.random());
+			var max_q_next=Math.max(run_next,jump_next);
+		}
+		else{
+			var pred=this.model.predict(tf.tensor2d([this.actions[this.frame]]));
+			var run_next=pred.get(0,0);
+			var jump_next=pred.get(0,1);
+			var max_q_next=Math.max(run_next,jump_next);
+		}
+		
 		var max_action=1;
 		var min_action=0;
 		if(run_next==max_q_next){
@@ -101,6 +121,7 @@ class TRL{
 		}
 		this.Q_Matrix[s][max_action]=this.alpha*(r+this.gamma*max_q_next-this.Q_Matrix[s][max_action]);
 		//this.Q_Matrix[s][1]=this.alpha*(r+this.gamma*max_q_next-this.Q_Matrix[s][1]);
+		this.decision[this.frame]=this.Q_Matrix[s];
 		if(run_next== max_q_next){
 			return 0;
 		}
@@ -168,7 +189,12 @@ class TRL{
 	}
 
 	train(){
-
+		var tensorX=tf.tensor2d(this.actions);
+		var tensorY=tf.tensor2d(this.decision);
+		this.model.fit(tensorX,tensorY,{epochs:10}).then(()=>{
+					this.trained=true;
+					this.game.restart();
+		});
 				
 	}
 
