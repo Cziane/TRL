@@ -603,7 +603,7 @@ var game;
                 this.tRex.blinkCount < Runner.config.MAX_BLINK_COUNT)) {
                 this.tRex.update(deltaTime);
             	if(this.bot !=undefined && this.horizon.obstacles.length>0 ){
-            		this.bot.update(this.tRex,this.horizon.obstacles[0],Math.ceil(this.distanceRan),this.currentSpeed);
+            		this.bot.update(this.tRex,this.horizon.obstacles[0], this.distanceMeter.getActualDistance(Math.ceil(this.distanceRan)),this.currentSpeed);
             	}
                 this.scheduleNextUpdate();
             }
@@ -804,7 +804,7 @@ var game;
             // Reset the time clock.
             this.time = getTimeStamp();
              if(this.bot !=undefined){
-            		this.bot.update(this.tRex,this.horizon.obstacles[0],Math.ceil(this.distanceRan),this.currentSpeed);
+            		this.bot.update(this.tRex,this.horizon.obstacles[0], this.distanceMeter.getActualDistance(Math.ceil(this.distanceRan)),this.currentSpeed);
              }
         },
 

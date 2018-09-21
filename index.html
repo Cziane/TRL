@@ -52,18 +52,19 @@
 <script src="assets/js/TRL.js"></script>
 <script >
     $(document).ready(function(){
-        $('#ratioLabel').text($('#ratioExplo').val()*100 +"%");
+        var started=false;
+        $('#ratioLabel').text($('#ratioExplo').val()*100 +"% of random actions");
 
         var ctx = document.getElementById("chart_stat").getContext('2d');
 
         var game_chart = new Chart(ctx, {
         type: 'line',
         data:{
-            labels:['0'],
+            labels:[],
             datasets:[{
                 label: "Current Score",
-                data:[0],
-                borderColor: "#eebcde",
+                data:[],
+                borderColor: "#007bff",
                 fill: false
             }
             ]
@@ -98,7 +99,22 @@
     });
 
         $('#ratioExplo').change(function(){
-        $('#ratioLabel').text($('#ratioExplo').val()*100 +"%");
+        $('#ratioLabel').text($('#ratioExplo').val()*100 +"% of random actions");
+        });
+
+        $('#start').click(function(){
+            if(!started){
+                var agent=new TRL(game,game_chart,'ratioExplo');
+                agent.start();
+                $(this).text('Reinitialize !');
+                $(this).removeClass('btn-primary');
+                $(this).addClass('btn-danger');
+                started=true;
+            }
+            else{
+                document.location.reload(false);
+            }
+            
         });
     });
 </script>

@@ -20,7 +20,7 @@ class TRL{
 		this.gamma=1;
 		this.alpha=0.9;
 		this.manager=new TRL_Manager(chart,input_explo);
-		this.explovsexploit=0.8;
+		this.explovsexploit=this.manager.getRatioExplo();
 
 		this.R_Matrix=[
 		[1,0],
@@ -55,6 +55,7 @@ class TRL{
 			this.distance=this.getDistance();
 			var state_d=this.getDistanceState(this.distance);
 			this.update_Q(state_d,this.getDistanceState([this.distance[0]+this.speed*2,this.distance[1]]),reward,this.previousAction);
+			this.manager.update(this.explovsexploit,score,this.game_nb);
 			this.game_nb++;
 			this.game.restart();
 			return 0;			
@@ -227,8 +228,16 @@ class TRL_Manager{
 	}
 
 	update(explorrate,score,nb_game){
+		this.setRatioExplo(explorrate);
 		this.updateLine(nb_game,score);
+	}
+
+	getRatioExplo(){
 		return this.explo_input.val();
+	}
+	setRatioExplo(value){
+		this.explo_input.val(value);
+		this.explo_input.change();
 	}
 
 	updateLine(label, data){
