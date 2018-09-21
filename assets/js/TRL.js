@@ -152,7 +152,7 @@ class TRL{
 
 	getDistance(){
 		var nearestPoint =[this.obstacle.xpos,this.obstacle.ypos];
-		var farestPoit=[this.obstacle.xpos+this.obstacle.width,this.obstacle.ypos];
+		var farestPoit=[this.obstacle.xpos+this.obstacle.width,this.obstacle.ypos+this.obstacle.height];
 		var tRexPoint=[this.trex.x+this.trex.width,this.trex.y];
 		
 		var distance=[Math.abs(nearestPoint[0]-tRexPoint[0]),nearestPoint[1]-tRexPoint[1]];
@@ -160,7 +160,7 @@ class TRL{
 	}
 
 	getDistanceState(distance){
-			if(distance[1]<-10){
+			if(distance[1]<5){
 				return 5;
 			}
 			if(distance[0]< this.speed*5){
