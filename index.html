@@ -5,6 +5,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0,maximum-scale=1.0, user-scalable=no">
     <title >TRL</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css" integrity="sha384-MCw98/SFnGE8fJT3GXwEOngsV7Zt27NXFoaoApmYm81iuXoPkFOJwJ8ERdknLPMO" crossorigin="anonymous">
     <link rel="stylesheet" href="assets/css/style.css">
 </head>
 
@@ -27,8 +28,78 @@
     <div class="canvas">
         
     </div>
+
+    <div class="command">
+        <div class="input-group">
+        <button class="btn btn-primary"  id="start"  role="button" >Start</button>
+        </div>
+        <input id="ratioExplo" type="range" class="custom-range" value="0.5" min="0.0" step="0.1" max="1.0">
+        <span id="ratioLabel"></span>
+    </div>
+
+    <div class="stats">
+        <canvas id="chart_stat">
+            
+        </canvas>
+    </div>
 </body>
+<script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js" integrity="sha384-ZMP7rVo3mIykV+2+9J3UJ46jBk0WLaUAdn689aCwoqbBJiSnjAK/l8WvCWPIPm49" crossorigin="anonymous"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/js/bootstrap.min.js" integrity="sha384-ChfqqxuZUCnJSK3+MXmPNIyE6ZbWh2IMqE241rYiqJxyMiZ6OW/JmZQ5stwEULTy" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.7.2/Chart.bundle.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@0.13.0"> </script>
 <script src="assets/js/game.js"></script>
 <script src="assets/js/TRL.js"></script>
+<script >
+    $(document).ready(function(){
+        $('#ratioLabel').text($('#ratioExplo').val()*100 +"%");
+
+        var ctx = document.getElementById("chart_stat").getContext('2d');
+
+        var game_chart = new Chart(ctx, {
+        type: 'line',
+        data:{
+            labels:['0'],
+            datasets:[{
+                label: "Current Score",
+                data:[0],
+                borderColor: "#eebcde",
+                fill: false
+            }
+            ]
+        },
+        options: {
+        title: {
+                display: true,
+                text: 'Game Progress'
+            },
+        scales: {
+            xAxes:[{
+                    display: true,
+                    scaleLabel: {
+                                display: true,
+                                labelString: 'Games'
+                    }
+                }],
+            yAxes:[{
+                display:true,
+                ticks:{
+                    suggestedMin:0,
+                    beginAtZero:true
+                },
+                scaleLabel: {
+                                display: true,
+                                labelString: 'Score'
+                    }
+            }]
+            }
+
+        }
+    });
+
+        $('#ratioExplo').change(function(){
+        $('#ratioLabel').text($('#ratioExplo').val()*100 +"%");
+        });
+    });
+</script>
 </html>

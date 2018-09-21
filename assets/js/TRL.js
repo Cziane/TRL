@@ -2,7 +2,7 @@
 
 class TRL{
 
-	constructor(gme,learningMin=500){
+	constructor(gme,chart,input_explo,learningMin=500){
 		//reference to game
 		this.game=gme;
 		this.learningMin=learningMin;
@@ -10,6 +10,7 @@ class TRL{
 		this.real_frame=0;
 		this.random=true;
 		this.game_nb=0;
+		this.framerate=4;
 		//matrice state;
 		this.frame=0;
 		//action matrix
@@ -18,14 +19,14 @@ class TRL{
 		//Q-learning parameters
 		this.gamma=1;
 		this.alpha=0.9;
-		this.explovsexploit=0.2;
+		this.manager=new TRL_Manager(chart,input_explo);
+		this.explovsexploit=0.8;
 
 		this.R_Matrix=[
 		[1,0],
 		[1,-10],
 		[-150,-150]
 		];
-
 
 		//init
 		this.Q_Matrix=[
@@ -58,7 +59,7 @@ class TRL{
 			this.game.restart();
 			return 0;			
 		}
-		if(this.real_frame%4!=0){
+		if(this.real_frame%this.framerate!=0){
 			this.real_frame++;
 			return 0;
 		}
@@ -87,6 +88,7 @@ class TRL{
 		
 		this.speed=speed;
 		this.distance=this.getDistance();
+		console.log(this.distance);
 		this.actions[this.frame]=[speed, this.distance[0],this.distance[1], this.status[this.frame]];
 		//console.log(this.getDistance());
 		var state_d=this.getDistanceState(this.distance);
@@ -151,8 +153,8 @@ class TRL{
 	}
 
 	getDistance(){
-		var nearestPoint =[this.obstacle.xpos,this.obstacle.ypos+this.obstacle.heigh];
-		var farestPoit=[this.obstacle.xpos+this.obstacle.width,this.obstacle.ypos+this.obstacle.height];
+		var nearestPoint =[this.obstacle.xpos, this.obstacle.ypos+this.obstacle.height];
+		var farestPoit=[this.obstacle.xpos+this.obstacle.width,this.obstacle.ypos];
 		var tRexPoint=[this.trex.x+this.trex.width,this.trex.y];
 		
 		var distance=[Math.abs(nearestPoint[0]-tRexPoint[0]),nearestPoint[1]-tRexPoint[1]];
@@ -163,16 +165,16 @@ class TRL{
 			if(distance[1]<5){
 				return 5;
 			}
-			if(distance[0]< this.speed*5){
+			if(distance[0]< (this.speed*3)*this.framerate){
 				return 4;
 			}
-			else if(distance[0]<this.speed*10){
+			else if(distance[0]<this.speed*6*this.framerate){
 				return 3;
 			}
-			else if(distance[0]<this.speed*15){
+			else if(distance[0]<this.speed*12*this.framerate){
 				return 2;
 			}
-			else if(distance[0]<this.speed*20){
+			else if(distance[0]<this.speed*15*this.framerate){
 				return 1;
 			}
 			else{
@@ -212,5 +214,26 @@ class TRL{
 
 	run(){
 		return true;
+	}
+}
+
+
+class TRL_Manager{
+
+
+	constructor(chart,explo_input){
+		this.chart=chart;
+		this.explo_input=$("#"+explo_input);
+	}
+
+	update(explorrate,score,nb_game){
+		this.updateLine(nb_game,score);
+		return this.explo_input.val();
+	}
+
+	updateLine(label, data){
+	this.chart.data.labels.push(label);
+    this.chart.data.datasets[0].data.push(data);
+    this.chart.update();
 	}
 }

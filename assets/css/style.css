@@ -66,9 +66,43 @@ html, body {
   z-index: 1;
 }
 
+
 #offline-resources {
   display: none;
 }
+
+
+/* controles*/
+
+
+#start{
+  min-width: 25%;
+  display: block;
+  margin: auto;
+}
+
+#ratioExplo{
+  max-width: 90%;
+  display:block;
+  margin: auto;
+  margin-top: 2rem;
+}
+
+#ratioLabel{
+  display: block;
+  width: 90%;
+  text-align: center;
+  margin: auto;
+  margin-top: 0.4rem;
+  font-size: 24px;
+  font-weight: bold;
+}
+
+.input-group{
+  width: 90%;
+  margin: auto;
+}
+
 
 @media (max-width: 420px) {
   .suggested-left > #control-buttons, .suggested-right > #control-buttons {
